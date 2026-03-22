@@ -1,0 +1,157 @@
+{
+  "name": "API-googlesheets-Vue",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "data",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "53b04cc4-7f82-4f33-b948-2de75f000b4e",
+      "name": "Webhook",
+      "webhookId": "6be336db-42d4-4a7d-a64f-309c19ac694e"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1HZGoPexHT6p0yCcqsB9-hcukFcB-y-Y9gjporkyqn0c",
+          "mode": "list",
+          "cachedResultName": "ลงทะเบียน (การตอบกลับ)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HZGoPexHT6p0yCcqsB9-hcukFcB-y-Y9gjporkyqn0c/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1888756546,
+          "mode": "list",
+          "cachedResultName": "register",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1HZGoPexHT6p0yCcqsB9-hcukFcB-y-Y9gjporkyqn0c/edit#gid=1888756546"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "36fab904-ea41-4867-b7a8-9c3ac44f522a",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SUFrUpNkg1p78Flu",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6e49a28-3a55-4deb-9e7e-c11d2f380e94",
+              "name": "tdate",
+              "value": "={{ $json['ประทับเวลา'] }}",
+              "type": "string"
+            },
+            {
+              "id": "6e7ab845-f2e1-4eea-a5ce-29fb6c412521",
+              "name": "id",
+              "value": "={{ $json['รหัสนักศึกษา'] }}",
+              "type": "string"
+            },
+            {
+              "id": "28b07663-3a43-403c-9a0a-11c7195da553",
+              "name": "fullname",
+              "value": "={{ $json['ชื่อ - นามสกุล'] }}",
+              "type": "string"
+            },
+            {
+              "id": "d65f237d-4c7d-464b-84e7-003692284cce",
+              "name": "department",
+              "value": "={{ $json['คณะ'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "cb30dbaa-e0c9-41cd-a564-80588b3044bc",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        0
+      ],
+      "id": "50ff01cd-ada5-495c-afdf-60d893a161a8",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ee84b72f-8a31-4ca7-8203-e62316caf629",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8742bf48b6da2ae89a4ffd485895d7b8cfc62cfdf51dd7698f1bf1279e1037fa"
+  },
+  "id": "fVL8IIhRRIP50Yqk",
+  "tags": []
+}
