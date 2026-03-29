@@ -133,7 +133,7 @@ const fetchData = async () => {
   error.value = null
   
   try {
-    const response = await fetch('http://localhost:5678/webhook/data')
+    const response = await fetch('http://localhost:5678/webhook-test/data')
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
     const data = await response.json()
     users.value = data

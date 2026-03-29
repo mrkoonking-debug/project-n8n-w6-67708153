@@ -83,7 +83,7 @@ const submitProduct = async () => {
     try {
         // 🔥 ข้อควรระวัง: ตอนนี้ใช้ webhook-test อยู่ ไว้สำหรับทดสอบตอนที่กด Listen ใน n8n
         // ถ้าจะใช้จริงอย่าลืมเปลี่ยนเป็น /webhook/newproducts นะครับ
-        const response = await fetch("http://localhost:5678/webhook/newproducts", {
+        const response = await fetch("http://localhost:5678/webhook-test/newproducts", {
             method: "POST", // บังคับว่าเป็น POST ตามที่ n8n ต้องการ
             headers: {
                 "Content-Type": "application/json"
