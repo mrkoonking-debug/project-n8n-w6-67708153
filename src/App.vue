@@ -1,35 +1,31 @@
 <template>
   <div id="app-container">
     
-    <!-- Apple Style Navbar -->
     <nav class="apple-navbar">
       <div class="nav-content">
         
-        <!-- Brand / Logo Area -->
         <div class="nav-brand">
           <span class="brand-text fw-bold">Project</span>
           <span class="brand-text fw-light">N8N</span>
           <span class="brand-badge">67708153</span>
         </div>
 
-        <!-- Hamburger Button (Mobile Only) -->
         <button class="mobile-toggle" @click="toggleMenu" :class="{ 'is-active': isMenuOpen }">
           <span class="bar"></span>
           <span class="bar"></span>
           <span class="bar"></span>
         </button>
 
-        <!-- Navigation Links -->
         <div class="nav-links" :class="{ 'nav-active': isMenuOpen }">
           <router-link to="/" class="apple-link" @click="closeMenu">หน้าแรก</router-link>
           <router-link to="/about" class="apple-link" @click="closeMenu">เกี่ยวกับ</router-link>
-          <!-- ลิงก์ไปหน้าฟอร์ม / Dashboard -->
+          <router-link to="/products" class="apple-link" @click="closeMenu">รายการสินค้า</router-link>
+          <router-link to="/add-product" class="apple-link" @click="closeMenu">เพิ่มสินค้า</router-link>
         </div>
 
       </div>
     </nav>
 
-    <!-- Router View Container with Smooth Transition -->
     <main class="main-content">
       <router-view v-slot="{ Component }">
         <transition name="page-fade" mode="out-in">
