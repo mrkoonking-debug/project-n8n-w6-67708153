@@ -70,7 +70,7 @@ const fetchProducts = async () => {
 
     try {
         // ลิงก์ตรงนี้ถ้าตอนเทสต์แล้วมันไม่เวิร์ค ให้เช็คเรื่อง Production URL ใน n8n ดีๆ ครับ
-        const response = await fetch("http://localhost:5678/webhook-test/get-products");
+        const response = await fetch("http://localhost:5678/webhook/get-products");
         
         if (!response.ok) throw new Error("Network response was not ok");
         
