@@ -1,255 +1,118 @@
 <template>
-    <div class="apple-container py-5">
-        <div class="row justify-content-center m-0">
-            <div class="col-12 col-md-8 col-lg-5">
+  <div class="page">
+    <section class="hero">
+      <p class="hero-label">ระบบลงทะเบียน</p>
+      <h1 class="hero-title">ลงทะเบียนสมาชิก</h1>
+      <p class="hero-desc">กรอกข้อมูลของคุณเพื่อบันทึกลง Google Sheets ผ่าน n8n</p>
+    </section>
 
-                <!-- Apple Style Card -->
-                <div class="apple-card">
+    <div class="container">
+      <div class="card">
+        <transition name="fade">
+          <div v-if="status.message" class="alert" :class="status.type === 'success' ? 'alert-ok' : 'alert-fail'">
+            {{ status.type === 'success' ? '✓' : '✕' }} {{ status.message }}
+          </div>
+        </transition>
 
-                    <!-- Header -->
-                    <div class="text-center mb-4">
-                        <div class="apple-icon mb-3">ลงทะเบียน</div>
-                        <p class="apple-subtitle">กรอกข้อมูลของคุณเพื่อดำเนินการต่อ</p>
-                    </div>
-
-                    <!-- Body -->
-                    <div>
-                        <!-- Smooth Alert -->
-                        <transition name="fade">
-                            <div v-if="status.message" 
-                                 class="apple-alert mb-4" 
-                                 :class="status.type === 'success' ? 'alert-success' : 'alert-error'">
-                                {{ status.message }}
-                            </div>
-                        </transition>
-
-                        <!-- Form -->
-                        <form @submit.prevent="submitForm">
-
-                            <div class="mb-3">
-                                <label class="apple-label">รหัสนักศึกษา</label>
-                                <input type="text" class="apple-input" v-model="data.id" placeholder="Ex. 6401234567" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="apple-label">ชื่อ-นามสกุล</label>
-                                <input type="text" class="apple-input" v-model="data.fullname" placeholder="ชื่อ นามสกุล" required>
-                            </div>
-
-                            <div class="mb-4">   
-                                <label class="apple-label">คณะ / แผนก</label>
-                                <select class="apple-input apple-select" v-model="data.department" required>
-                                    <option value="" disabled selected>เลือกคณะของคุณ</option>
-                                    <option value="บริหารธุรกิจ">บริหารธุรกิจ</option>
-                                    <option value="บัญชี">บัญชี</option>
-                                    <option value="เทคโนโลยีสารสนเทศ">เทคโนโลยีสารสนเทศ</option>
-                                </select>
-                            </div>
-
-                            <button class="apple-btn" :disabled="loading">
-                                <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-                                {{ loading ? 'กำลังดำเนินการ...' : 'ลงทะเบียน' }}
-                            </button>
-
-                        </form>
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
+        <form @submit.prevent="submitForm">
+          <div class="field">
+            <label>รหัสนักศึกษา</label>
+            <input v-model="data.id" placeholder="Ex. 6401234567" required />
+          </div>
+          <div class="field">
+            <label>ชื่อ-นามสกุล</label>
+            <input v-model="data.fullname" placeholder="ชื่อ นามสกุล" required />
+          </div>
+          <div class="field">
+            <label>คณะ / แผนก</label>
+            <select v-model="data.department" required>
+              <option value="" disabled selected>เลือกคณะของคุณ</option>
+              <option value="บริหารธุรกิจ">บริหารธุรกิจ</option>
+              <option value="บัญชี">บัญชี</option>
+              <option value="เทคโนโลยีสารสนเทศ">เทคโนโลยีสารสนเทศ</option>
+            </select>
+          </div>
+          <button class="btn" :disabled="loading" type="submit">
+            {{ loading ? 'กำลังดำเนินการ...' : 'ลงทะเบียน' }}
+          </button>
+        </form>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup>
 import { reactive, ref } from "vue";
-
-const data = reactive({
-    id: "",
-    fullname: "",
-    department: ""
-});
-
+const data = reactive({ id: "", fullname: "", department: "" });
 const loading = ref(false);
-
-const status = reactive({
-    message: "",
-    type: ""
-});
+const status = reactive({ message: "", type: "" });
 
 const submitForm = async () => {
-    loading.value = true;
-    status.message = "";
-
-    try {
-        const response = await fetch("http://localhost:5678/webhook/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                ...data,
-                // แนะนำ: ส่งเป็น ISOString ตัวเต็มไปเลย แล้วให้ฝั่ง n8n จัดการ Format 
-                // เพราะใช้ split('T')[0] ระวังเจอปัญหา Timezone offset ของไทย 
-                tdate: new Date().toISOString() 
-            })
-        });
-
-        if (!response.ok) throw new Error("Network response was not ok");
-
-        status.message = "ลงทะเบียนเสร็จสมบูรณ์";
-        status.type = "success";
-
-        // reset form
-        data.id = "";
-        data.fullname = "";
-        data.department = "";
-
-        // ซ่อนข้อความอัตโนมัติหลังผ่านไป 3 วินาที (ให้ฟีลเหมือน Toast ของ iOS)
-        setTimeout(() => {
-            status.message = "";
-        }, 3000);
-
-    } catch (error) {
-        console.error(error);
-        status.message = "ไม่สามารถลงทะเบียนได้ในขณะนี้ โปรดลองอีกครั้ง";
-        status.type = "danger";
-    } finally {
-        loading.value = false;
-    }
+  loading.value = true; status.message = "";
+  try {
+    const response = await fetch("http://localhost:5678/webhook/register", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...data, tdate: new Date().toISOString() })
+    });
+    if (!response.ok) throw new Error("Network error");
+    status.message = "ลงทะเบียนเสร็จสมบูรณ์"; status.type = "success";
+    data.id = ""; data.fullname = ""; data.department = "";
+    setTimeout(() => { status.message = ""; }, 3000);
+  } catch (e) {
+    status.message = "ไม่สามารถลงทะเบียนได้ โปรดลองอีกครั้ง"; status.type = "danger";
+  } finally { loading.value = false; }
 };
 </script>
 
 <style scoped>
-/* 
-  Apple Design System (Cupertino)
-  เน้นความเรียบง่าย พื้นที่ว่าง และฟอนต์ที่สะอาดตา
-*/
+.page { min-height: calc(100vh - 52px); background: #fff; }
+.hero { text-align: center; padding: 56px 24px 28px; }
+.hero-label { font-size: 0.8rem; font-weight: 600; color: #0071e3; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+.hero-title { font-size: 2.5rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.03em; margin-bottom: 8px; }
+.hero-desc { font-size: 1rem; color: #86868b; }
 
-.apple-container {
-    background-color: #f5f5f7; /* สีพื้นหลังเอกลักษณ์ของ Apple */
-    min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
+.container { max-width: 440px; margin: 0 auto; padding: 0 24px 60px; }
 
-.apple-card {
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04); /* เงาฟุ้งๆ บางๆ */
+.card {
+  background: #fff; border: 1px solid #e8e8ed; border-radius: 18px;
+  padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
 
-.apple-icon {
-    font-size: 2.5rem;
-    color: #1d1d1f;
-    line-height: 1;
+.field { margin-bottom: 20px; }
+.field label { display: block; font-size: 0.82rem; font-weight: 600; color: #1d1d1f; margin-bottom: 6px; }
+
+.field input, .field select {
+  width: 100%; padding: 12px 14px; font-size: 0.95rem; font-family: 'Inter', sans-serif;
+  border: 1px solid #d2d2d7; border-radius: 12px; color: #1d1d1f;
+  background: #fff; outline: none; transition: all 0.2s ease;
+  -webkit-appearance: none; appearance: none;
+}
+.field input::placeholder { color: #aeaeb2; }
+.field input:focus, .field select:focus { border-color: #0071e3; box-shadow: 0 0 0 4px rgba(0,113,227,0.1); }
+
+.field select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;
+  cursor: pointer;
 }
 
-.apple-title {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: #1d1d1f;
-    letter-spacing: -0.02em;
-    margin-bottom: 0.5rem;
+.btn {
+  width: 100%; padding: 13px; font-size: 0.95rem; font-weight: 600;
+  font-family: 'Inter', sans-serif; border: none; border-radius: 12px;
+  background: #0071e3; color: #fff; cursor: pointer;
+  transition: all 0.2s ease; margin-top: 4px;
 }
+.btn:hover:not(:disabled) { background: #0077ED; }
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.apple-subtitle {
-    font-size: 0.95rem;
-    color: #86868b;
-}
+.alert { padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; margin-bottom: 20px; }
+.alert-ok { background: #e8f5e9; color: #1b5e20; }
+.alert-fail { background: #ffeef0; color: #c62828; }
 
-/* Typography สำหรับ Label */
-.apple-label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #1d1d1f;
-    margin-bottom: 0.5rem;
-}
+.fade-enter-active { transition: all 0.3s ease; }
+.fade-leave-active { transition: all 0.2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-8px); }
 
-/* Inputs สไตล์ Apple */
-.apple-input {
-    width: 100%;
-    background-color: #f5f5f7; /* พื้นเทาอ่อน ไม่มีขอบ */
-    border: 1px solid transparent;
-    border-radius: 12px;
-    padding: 14px 16px;
-    font-size: 1rem;
-    color: #1d1d1f;
-    transition: all 0.2s ease;
-}
-
-.apple-input::placeholder {
-    color: #86868b;
-}
-
-.apple-input:focus {
-    outline: none;
-    background-color: #ffffff;
-    border-color: #0071e3;
-    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15); /* Focus ring สีฟ้า */
-}
-
-/* Select Box ทำให้ดูเนียนไปกับ Input */
-.apple-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 16px center;
-    background-size: 16px;
-}
-
-/* ปุ่มกดสไตล์ Apple Blue */
-.apple-btn {
-    width: 100%;
-    background-color: #0071e3;
-    color: #ffffff;
-    border: none;
-    border-radius: 12px;
-    padding: 14px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.apple-btn:hover:not(:disabled) {
-    background-color: #0077ed;
-}
-
-.apple-btn:active:not(:disabled) {
-    transform: scale(0.98); /* เวลากดให้ยุบลงนิดนึง ฟีลลิ่งปุ่มจริง */
-}
-
-.apple-btn:disabled {
-    background-color: #0071e3;
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Inline Alert */
-.apple-alert {
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-align: center;
-}
-.alert-success {
-    background-color: #e5f5ea;
-    color: #008a38;
-}
-.alert-error {
-    background-color: #fcebeb;
-    color: #cc292b;
-}
-
-/* Vue Transitions */
-.fade-enter-active, .fade-leave-active {
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-.fade-enter-from, .fade-leave-to {
-    opacity: 0;
-    transform: translateY(-10px);
-}
+@media (max-width: 600px) { .hero-title { font-size: 1.8rem; } .card { padding: 24px 20px; } }
 </style>

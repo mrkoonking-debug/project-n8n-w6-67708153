@@ -1,0 +1,159 @@
+{
+  "name": "API-equipment-Vue",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "equipment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a1b2c3d4-1111-4444-aaaa-111111111111",
+      "name": "Webhook",
+      "webhookId": "a1b2c3d4-2222-4444-bbbb-222222222222"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "การเบิกอุปกรณ์"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "การตอบแบบฟอร์มการเบิกอุปกรณ์"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        220,
+        0
+      ],
+      "id": "a1b2c3d4-3333-4444-cccc-333333333333",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SUFrUpNkg1p78Flu",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1a1a1a1-1111-1111-1111-111111111111",
+              "name": "date",
+              "value": "={{ $json['ประทับเวลา'] }}",
+              "type": "string"
+            },
+            {
+              "id": "f2b2b2b2-2222-2222-2222-222222222222",
+              "name": "fullname",
+              "value": "={{ $json['ชื่อ-สกุล'] }}",
+              "type": "string"
+            },
+            {
+              "id": "f3c3c3c3-3333-3333-3333-333333333333",
+              "name": "department",
+              "value": "={{ $json['แผนก'] }}",
+              "type": "string"
+            },
+            {
+              "id": "f4d4d4d4-4444-4444-4444-444444444444",
+              "name": "equipment",
+              "value": "={{ $json['รายชื่ออุปกรณ์'] }}",
+              "type": "string"
+            },
+            {
+              "id": "f5e5e5e5-5555-5555-5555-555555555555",
+              "name": "quantity",
+              "value": "={{ $json['จำนวนที่เบิก'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        0
+      ],
+      "id": "a1b2c3d4-5555-4444-eeee-555555555555",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        660,
+        0
+      ],
+      "id": "a1b2c3d4-6666-4444-ffff-666666666666",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "00000000-0000-0000-0000-000000000000",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

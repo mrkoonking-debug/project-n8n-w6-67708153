@@ -2,36 +2,44 @@
   <div class="page">
     <section class="hero">
       <p class="hero-label">ข้อมูลเรียลไทม์</p>
-      <h1 class="hero-title">รายชื่อผู้ลงทะเบียน</h1>
-      <p class="hero-desc">ข้อมูลจาก n8n Webhook API เชื่อมต่อ Google Sheets</p>
+      <h1 class="hero-title">รายการเบิกอุปกรณ์</h1>
+      <p class="hero-desc">ดึงข้อมูลจาก Google Sheets ผ่าน n8n Webhook API</p>
     </section>
 
     <div class="container">
       <div class="card">
         <div class="toolbar">
           <div class="toolbar-left">
-            <span class="toolbar-title">รายการข้อมูล</span>
-            <span class="count-badge">{{ users.length }}</span>
+            <span class="toolbar-title">รายการเบิกอุปกรณ์</span>
+            <span class="count-badge">{{ items.length }}</span>
           </div>
-          <button class="btn-sm" @click="fetchData" :disabled="loading">
-            {{ loading ? 'โหลด...' : '↻ อัปเดต' }}
-          </button>
+          <button class="btn-sm" @click="fetchData" :disabled="loading">{{ loading ? 'โหลด...' : '↻ อัปเดต' }}</button>
         </div>
 
         <div v-if="loading" class="state"><div class="spinner"></div><p>กำลังโหลด...</p></div>
         <div v-else-if="error" class="state"><p class="err-text">⚠ {{ error }}</p><button class="btn-sm" @click="fetchData">ลองอีกครั้ง</button></div>
-        <div v-else-if="users.length === 0" class="state"><p>📋 ยังไม่มีข้อมูล</p></div>
+        <div v-else-if="items.length === 0" class="state"><p>📋 ยังไม่มีข้อมูลการเบิก</p></div>
 
         <div v-else class="table-wrap">
           <table>
-            <thead><tr><th>#</th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>คณะ / แผนก</th><th class="r">วันที่</th></tr></thead>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>ชื่อ-นามสกุล</th>
+                <th>แผนก</th>
+                <th>รายการอุปกรณ์</th>
+                <th>จำนวน</th>
+                <th class="r">วันที่เบิก</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr v-for="(item, i) in users" :key="i">
+              <tr v-for="(item, i) in items" :key="i">
                 <td class="muted">{{ i + 1 }}</td>
-                <td><span class="code-tag">{{ item.id }}</span></td>
                 <td class="bold">{{ item.fullname }}</td>
                 <td><span class="chip" :class="getDeptClass(item.department)">{{ item.department }}</span></td>
-                <td class="r muted small">{{ formatDate(item.tdate) }}</td>
+                <td><span class="equip-tag">{{ item.equipment }}</span></td>
+                <td><span class="qty-badge">{{ item.quantity }}</span></td>
+                <td class="r muted small">{{ formatDate(item.date) }}</td>
               </tr>
             </tbody>
           </table>
@@ -43,7 +51,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-const users = ref([])
+
+const items = ref([])
 const loading = ref(false)
 const error = ref(null)
 
@@ -55,19 +64,21 @@ const formatDate = (d) => {
 
 const getDeptClass = (dept) => {
   if (!dept) return ''
-  if (dept.includes('บริหาร')) return 'chip-blue'
+  if (dept.includes('บุคคล')) return 'chip-purple'
   if (dept.includes('บัญชี')) return 'chip-green'
-  if (dept.includes('เทคโนโลยี') || dept.includes('ไอที')) return 'chip-purple'
+  if (dept.includes('ไอที')) return 'chip-blue'
+  if (dept.includes('การตลาด')) return 'chip-orange'
+  if (dept.includes('ประชาสัมพันธ์')) return 'chip-pink'
   return ''
 }
 
 const fetchData = async () => {
   loading.value = true; error.value = null
   try {
-    const res = await fetch('http://localhost:5678/webhook-test/data')
+    const res = await fetch('http://localhost:5678/webhook/equipment')
     if (!res.ok) throw new Error()
-    users.value = await res.json()
-  } catch { error.value = 'ตรวจสอบ Webhook หรือการเชื่อมต่อ' }
+    items.value = await res.json()
+  } catch { error.value = 'ตรวจสอบว่า Workflow ใน n8n เปิดใช้งานอยู่หรือไม่' }
   finally { loading.value = false }
 }
 
@@ -81,7 +92,7 @@ onMounted(() => fetchData())
 .hero-title { font-size: 2.2rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.03em; margin-bottom: 8px; }
 .hero-desc { font-size: 0.95rem; color: #86868b; }
 
-.container { max-width: 860px; margin: 0 auto; padding: 0 24px 60px; }
+.container { max-width: 920px; margin: 0 auto; padding: 0 24px 60px; }
 
 .card {
   background: #fff; border: 1px solid #e8e8ed; border-radius: 18px;
@@ -115,15 +126,19 @@ tr:hover { background: #fafbfc; }
 .muted { color: #86868b; }
 .small { font-size: 0.78rem; }
 .bold { font-weight: 600; color: #1d1d1f; }
-.code-tag { font-family: 'SF Mono', ui-monospace, monospace; font-size: 0.82rem; font-weight: 600; color: #0071e3; background: #e8f0fe; padding: 3px 8px; border-radius: 6px; }
+
+.equip-tag { font-size: 0.82rem; font-weight: 600; color: #0071e3; background: #e8f0fe; padding: 3px 10px; border-radius: 6px; }
+.qty-badge { font-size: 0.82rem; font-weight: 700; color: #ff9500; background: #fff3e0; padding: 3px 10px; border-radius: 6px; font-family: 'SF Mono', ui-monospace, monospace; }
 
 .chip { padding: 3px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; }
-.chip-blue { background: #e8f0fe; color: #0055b3; }
-.chip-green { background: #e6f4ea; color: #137333; }
 .chip-purple { background: #f3e8fd; color: #7b2ff2; }
+.chip-green { background: #e6f4ea; color: #137333; }
+.chip-blue { background: #e8f0fe; color: #0055b3; }
+.chip-orange { background: #fff3e0; color: #e65100; }
+.chip-pink { background: #fce4ec; color: #c2185b; }
 
 @media (max-width: 768px) {
   .hero-title { font-size: 1.6rem; }
-  th, td { padding: 10px 16px; }
+  th, td { padding: 10px 16px; font-size: 0.82rem; }
 }
 </style>

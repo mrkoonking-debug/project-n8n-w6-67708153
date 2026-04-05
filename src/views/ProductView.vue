@@ -1,153 +1,112 @@
 <template>
-    <div class="apple-container py-5">
-        <div class="row justify-content-center m-0">
-            <div class="col-12 col-md-10 col-lg-8"> 
+  <div class="page">
+    <section class="hero">
+      <p class="hero-label">Real-time Data</p>
+      <h1 class="hero-title">รายการสินค้า</h1>
+      <p class="hero-desc">ดึงข้อมูลจาก Google Sheets ผ่าน n8n Webhook</p>
+    </section>
 
-                <div class="apple-card">
-                    <div class="text-center mb-4">
-                        <div class="apple-icon mb-3">📦</div>
-                        <h1 class="apple-title">รายการสินค้า</h1>
-                        <p class="apple-subtitle">ดึงข้อมูลแบบ Real-time จาก n8n & Google Sheets</p>
-                    </div>
-
-                    <transition name="fade">
-                        <div v-if="status.message" 
-                             class="apple-alert mb-4" 
-                             :class="status.type === 'success' ? 'alert-success' : 'alert-error'">
-                            {{ status.message }}
-                        </div>
-                    </transition>
-
-                    <div v-if="loading" class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-3 apple-subtitle">กำลังโหลดข้อมูลจากระบบ...</p>
-                    </div>
-
-                    <div v-else-if="products.length > 0" class="table-responsive">
-                        <table class="apple-table">
-                            <thead>
-                                <tr>
-                                    <th>รหัสสินค้า</th>
-                                    <th>ชื่อสินค้า</th>
-                                    <th>จำนวน</th>
-                                    <th>ราคา</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(item, index) in products" :key="index">
-                                    <td class="fw-bold">{{ item.id_product }}</td>
-                                    <td>{{ item.name_product }}</td>
-                                    <td>{{ item.number_product }}</td>
-                                    <td>{{ item.price_product }}</td> 
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div v-else class="text-center py-5 apple-subtitle">
-                        ไม่พบข้อมูลสินค้าในระบบ
-                    </div>
-
-                </div>
-            </div>
+    <div class="container">
+      <div class="card">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <span class="toolbar-title">สินค้าทั้งหมด</span>
+            <span class="count-badge" v-if="!loading">{{ products.length }}</span>
+          </div>
+          <button class="btn-sm" @click="fetchProducts" :disabled="loading">{{ loading ? 'โหลด...' : '↻ รีเฟรช' }}</button>
         </div>
+
+        <div v-if="loading" class="state"><div class="spinner"></div><p>กำลังโหลด...</p></div>
+        <div v-else-if="status.message" class="state"><p class="err-text">⚠ {{ status.message }}</p></div>
+        <div v-else-if="products.length === 0" class="state"><p>📦 ยังไม่มีสินค้า</p></div>
+
+        <div v-else class="grid">
+          <div v-for="(item, i) in products" :key="i" class="product-card">
+            <div class="card-top">
+              <span class="product-code">{{ item.id_product }}</span>
+              <span class="product-index">#{{ i + 1 }}</span>
+            </div>
+            <h4 class="product-name">{{ item.name_product }}</h4>
+            <div class="card-meta">
+              <div><span class="meta-label">จำนวน</span><span class="meta-val">{{ item.number_product }}</span></div>
+              <div class="meta-sep"></div>
+              <div><span class="meta-label">ราคา</span><span class="meta-val price">฿{{ Number(item.price_product).toLocaleString() }}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
-
-const products = ref([]);
-const loading = ref(true);
-const status = reactive({
-    message: "",
-    type: ""
-});
+const products = ref([]); const loading = ref(true);
+const status = reactive({ message: "", type: "" });
 
 const fetchProducts = async () => {
-    loading.value = true;
-    status.message = "";
-
-    try {
-        // ลิงก์ตรงนี้ถ้าตอนเทสต์แล้วมันไม่เวิร์ค ให้เช็คเรื่อง Production URL ใน n8n ดีๆ ครับ
-        const response = await fetch("http://localhost:5678/webhook/get-products");
-        
-        if (!response.ok) throw new Error("Network response was not ok");
-        
-        products.value = await response.json();
-        
-    } catch (error) {
-        console.error(error);
-        status.message = "ไม่สามารถเชื่อมต่อ API ได้ โปรดเช็ค n8n ว่ารันอยู่หรือไม่";
-        status.type = "danger";
-    } finally {
-        loading.value = false;
-    }
+  loading.value = true; status.message = "";
+  try {
+    const res = await fetch("http://localhost:5678/webhook/get-products");
+    if (!res.ok) throw new Error();
+    products.value = await res.json();
+  } catch { status.message = "ไม่สามารถเชื่อมต่อ API ได้"; }
+  finally { loading.value = false; }
 };
 
-onMounted(() => {
-    fetchProducts();
-});
+onMounted(() => fetchProducts());
 </script>
 
 <style scoped>
-.apple-container {
-    background-color: #f5f5f7;
-    min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+.page { min-height: calc(100vh - 52px); background: #fbfbfd; }
+.hero { text-align: center; padding: 48px 24px 24px; }
+.hero-label { font-size: 0.8rem; font-weight: 600; color: #0071e3; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+.hero-title { font-size: 2.2rem; font-weight: 700; color: #1d1d1f; letter-spacing: -0.03em; margin-bottom: 8px; }
+.hero-desc { font-size: 0.95rem; color: #86868b; }
+
+.container { max-width: 860px; margin: 0 auto; padding: 0 24px 60px; }
+
+.card {
+  background: #fff; border: 1px solid #e8e8ed; border-radius: 18px;
+  overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
 
-.apple-card {
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+.toolbar { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid #f0f0f5; }
+.toolbar-left { display: flex; align-items: center; gap: 10px; }
+.toolbar-title { font-size: 0.9rem; font-weight: 700; color: #1d1d1f; }
+.count-badge { font-size: 0.72rem; font-weight: 700; color: #0071e3; background: #e8f0fe; padding: 2px 10px; border-radius: 10px; }
+
+.btn-sm {
+  font-size: 0.8rem; font-weight: 600; font-family: 'Inter', sans-serif;
+  padding: 6px 14px; border-radius: 8px; border: 1px solid #d2d2d7;
+  background: #fff; color: #1d1d1f; cursor: pointer; transition: all 0.15s;
 }
+.btn-sm:hover:not(:disabled) { background: #f5f5f7; }
+.btn-sm:disabled { opacity: 0.4; }
 
-.apple-icon { font-size: 2.5rem; line-height: 1; }
-.apple-title { font-size: 1.75rem; font-weight: 600; color: #1d1d1f; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
-.apple-subtitle { font-size: 0.95rem; color: #86868b; }
+.state { padding: 60px 24px; text-align: center; color: #86868b; font-size: 0.9rem; }
+.err-text { color: #ff3b30; }
+.spinner { width: 24px; height: 24px; border: 2.5px solid #e8e8ed; border-top-color: #0071e3; border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.apple-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin-top: 1rem;
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; padding: 20px; }
+
+.product-card {
+  background: #fbfbfd; border: 1px solid #e8e8ed; border-radius: 14px;
+  padding: 18px; transition: all 0.2s ease;
 }
+.product-card:hover { border-color: #d2d2d7; box-shadow: 0 4px 16px rgba(0,0,0,0.06); transform: translateY(-2px); }
 
-.apple-table th {
-    background-color: #f5f5f7;
-    color: #86868b;
-    font-weight: 600;
-    font-size: 0.85rem;
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: none;
-}
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.product-code { font-size: 0.72rem; font-weight: 700; color: #0071e3; background: #e8f0fe; padding: 3px 8px; border-radius: 6px; font-family: 'SF Mono', ui-monospace, monospace; }
+.product-index { font-size: 0.7rem; color: #aeaeb2; font-weight: 600; }
+.product-name { font-size: 1rem; font-weight: 700; color: #1d1d1f; margin-bottom: 14px; }
 
-.apple-table th:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-.apple-table th:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+.card-meta { display: flex; align-items: center; gap: 14px; padding-top: 12px; border-top: 1px solid #f0f0f5; }
+.meta-label { display: block; font-size: 0.68rem; color: #86868b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+.meta-val { font-size: 0.92rem; font-weight: 600; color: #1d1d1f; }
+.meta-val.price { color: #34c759; }
+.meta-sep { width: 1px; height: 28px; background: #e8e8ed; }
 
-.apple-table td {
-    padding: 16px;
-    font-size: 0.95rem;
-    color: #1d1d1f;
-    border-bottom: 1px solid #e8e8ed;
-    transition: background-color 0.2s ease;
-}
-
-.apple-table tbody tr:hover td { background-color: #fcfcfc; }
-.apple-table tbody tr:last-child td { border-bottom: none; }
-
-.apple-alert {
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-align: center;
-}
-.alert-error { background-color: #fcebeb; color: #cc292b; }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease, transform 0.3s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-10px); }
+@media (max-width: 600px) { .hero-title { font-size: 1.6rem; } .grid { grid-template-columns: 1fr; padding: 16px; } }
 </style>
